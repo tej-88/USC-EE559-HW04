@@ -25,3 +25,18 @@ class Perceptron():
         
         return
     
+    def sgd_1(self, data):
+        data = np.random.permutation(data)
+        X = data[:, :-1]
+        y = data[:, -1]
+        num_epochs = 0
+        halt_condition = False
+
+        while not halt_condition:
+            for i in range(self.N):
+                x_i, y_i = X[i], y[i]
+                self.update_weights(x_i, y_i)
+                self.i += 1
+            num_epochs += 1
+            halt_condition = self.has_halted(X, y)
+        return

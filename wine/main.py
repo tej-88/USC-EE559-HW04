@@ -4,6 +4,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from perceptron import Perceptron
 
 #Constants
 TRAIN_DATA_FILENAME = './wine_train.csv'

@@ -10,12 +10,12 @@ class Perceptron():
     def fit(self, X, y, is_version_1=True):
         self.i = 0
         self.C = len(np.unique(y))
-        self.D, self.N = X.shape
+        self.N, self.D = X.shape
         self.weights = []
 
         for i in range(self.C):
             self.weights.append(np.ones((1, self.D)))
-            
+
         data = np.concatenate((X, y), axis=1)
 
         if (is_version_1):

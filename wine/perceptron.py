@@ -61,3 +61,10 @@ class Perceptron():
                     new_weight_m = self.weights[m][-1, :]
                     self.weights[m] = np.concatenate((self.weights[m], new_weight_m))
             return
+    
+
+    def get_g(self, x):
+        g = np.zeros((self.C, ))
+        for i in range(self.C):
+            g[i] = np.dot(self.weights[i][-1, :].T, x)
+        return g

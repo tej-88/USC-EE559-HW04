@@ -40,3 +40,24 @@ class Perceptron():
             num_epochs += 1
             halt_condition = self.has_halted(X, y)
         return
+
+    def update_weights(self, x, y):
+        g = self.get_g(x)
+        k = y
+        if np.argmax(g) == k:
+            for i in range(self.C):
+                self.weights[i] = np.concatenate((self.weights[i], self.weights[i][-1, :]))
+            return
+        else:
+            new_weight_k = self.weights[k][-1, :] + (self.eta * x)
+            self.weights[k] = np.concatenate((self.weights[k], new_weight_k))
+
+            l = np.argmax(g[g != g[k]])
+            new_weight_l = self.weights[l][-1, :] - (self.eta * x)
+            self.weights[l] = np.concatenate((self.weights[l], new_weight_l))
+
+            for m in range(self.C):
+                if (m != k) and (m != l):
+                    new_weight_m = self.weights[m][-1, :]
+                    self.weights[m] = np.concatenate((self.weights[m], new_weight_m))
+            return

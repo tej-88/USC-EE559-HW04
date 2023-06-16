@@ -17,3 +17,6 @@ def load_data(filename):
     X = np.concatenate((X0, X), axis=1)
     y = data.iloc[:, -1].to_numpy() - 1
     return X, y.reshape((y.shape[0], 1))
+
+#Training Data
+X, y = load_data(TRAIN_DATA_FILENAME)

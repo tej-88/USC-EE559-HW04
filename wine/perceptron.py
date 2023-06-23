@@ -13,58 +13,117 @@ class Perceptron():
         self.N, self.D = X.shape
         self.weights = []
 
-        for i in range(self.C):
-            self.weights.append(np.ones((1, self.D)))
+        initial_weight = np.ones((self.C, self.D))
 
-        data = np.concatenate((X, y), axis=1)
+        self.weights.append(initial_weight)
 
-        if (is_version_1):
+        data = np.concatenate((X, np.expand_dims(y, axis=1)), axis=1)
+
+        self.version = is_version_1
+        if (self.version):
             self.sgd_1(data)
         else:
             self.sgd_2(data)
-        
+
+        print('Fitting Done')
         return
     
     def sgd_1(self, data):
-        data = np.random.permutation(data)
-        X = data[:, :-1]
-        y = data[:, -1]
-        num_epochs = 0
         halt_condition = False
+        num_epochs = 0
 
         while not halt_condition:
+            data = np.random.permutation(data)
+            X = data[:, :-1]
+            y = data[:, -1].astype('int32')
             for i in range(self.N):
                 x_i, y_i = X[i], y[i]
-                self.update_weights(x_i, y_i)
+                new_weight = self.get_new_weight(x_i, y_i)
+                self.weights.append(new_weight)
                 self.i += 1
             num_epochs += 1
             halt_condition = self.has_halted(X, y)
+    
         return
 
-    def update_weights(self, x, y):
-        g = self.get_g(x)
+    def get_new_weight(self, x, y):
+        current_g = self.get_g(x)
         k = y
-        if np.argmax(g) == k:
-            for i in range(self.C):
-                self.weights[i] = np.concatenate((self.weights[i], self.weights[i][-1, :]))
-            return
+        if (np.argmax(current_g) == k):
+            return self.weights[-1]
         else:
-            new_weight_k = self.weights[k][-1, :] + (self.eta * x)
-            self.weights[k] = np.concatenate((self.weights[k], new_weight_k))
+            old_weight = self.weights[-1]
+            new_weight = np.empty_like(old_weight)
 
-            l = np.argmax(g[g != g[k]])
-            new_weight_l = self.weights[l][-1, :] - (self.eta * x)
-            self.weights[l] = np.concatenate((self.weights[l], new_weight_l))
+            new_weight[k] = old_weight[k] + (self.eta * x)
+            
+            g_not_k = current_g[current_g != current_g[k]]
+            
+            l = k
 
+            if len(g_not_k) == 0:
+                while l == k:
+                    l = np.random.randint(0, self.C)
+            else:
+                l = np.argmax(g_not_k)
+            
+            new_weight[l] = old_weight[l] - (self.eta * x)
+            
             for m in range(self.C):
                 if (m != k) and (m != l):
-                    new_weight_m = self.weights[m][-1, :]
-                    self.weights[m] = np.concatenate((self.weights[m], new_weight_m))
-            return
+                    new_weight[m] = old_weight[m]
+            
+            return new_weight
     
 
     def get_g(self, x):
-        g = np.zeros((self.C, ))
-        for i in range(self.C):
-            g[i] = np.dot(self.weights[i][-1, :].T, x)
+        g = np.dot(self.weights[-1], x)
+        print(g)
         return g
+
+
+    def has_halted(self, X, y):
+        if self.version:
+            if self.i >= self.I_MAX:
+                # last_100_weights = []
+                # for i in range(self.C):
+                #     last_100_weights.append(self.weights[i][-100:, :])
+                # error_rate = np.zeros((100, ))
+
+                # for i in range(100):
+                #     num_incorrect = 0
+                #     for j in range(self.N):
+                #         g = np.zeros((self.C, ))
+                #         for k in range(self.C):
+                #             g[k] = np.dot(last_100_weights[k][i, :].T, X[j, :])
+                #         if np.argmax(g) != y[j]:
+                #             num_incorrect += 1
+                #     error_rate[i] = num_incorrect
+                # i0 = np.argmin(error_rate)
+                # print(f'Best Iteration: {i0}')
+                # print(f'Best Error rate: {error_rate[i0] / self.N}')  
+                return True
+            else:
+                # last_epoch_weights = []
+                # for i in range(self.C):
+                #     last_epoch_weights.append(self.weights[i][-self.N:, :])
+                # a = np.all(np.isclose(last_epoch_weights[:, : , :], last_epoch_weights[:, -1, :]))
+                # print(a)
+                return False
+        else:
+            pass
+
+    def is_epoch_weight_updated(self):
+        prev_weight = self.weights[-self.N - 1]
+        current_weight = None
+        for i in self.weights[self.N:]:
+            current_weight = i
+            if current_weight != prev_weight:
+                return True
+            else:
+                prev_weight = current_weight
+        return False
+    
+    def predict(self, x):
+        g_hat = np.dot(self.weights[-1], x)
+        return np.argmax(g_hat) + 1
